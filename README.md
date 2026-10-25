@@ -59,12 +59,15 @@ Bogus'un seed'iyle çalışır: aynı seed aynı veriyi üretir (`UseSeed`, `Ran
 - **Kart numaraları üretilmez.** Paket yalnızca ödeme kuruluşlarının sandbox ortamları için herkese açık yayımladığı test kartlarından seçer.
 - Kontrol hanesi tutan bir TCKN, gerçek kimlik doğrulamasından (NVİ/KPS) geçmez. O doğrulama numarayla birlikte ad, soyad ve doğum yılını da kontrol eder.
 
+## Doğruluk nasıl sağlanıyor?
+
+- **Bağımsız doğrulama:** Testler üretilen değerleri bu paketin kendi koduyla değil, başka kütüphanelerle doğrular: IBAN için [IbanNet](https://github.com/skwasjer/IbanNet), TCKN için [TurkishId](https://github.com/ssg/TurkishId) ve [TurkishValidators](https://github.com/enesatacdev/TurkishValidators), VKN ve GSM için TurkishValidators. TCKN, VKN ve IBAN 2.000'er örnekle denenir.
+- **Bilinen numaralar:** TCKN ve VKN kontrol haneleri [python-stdnum](https://github.com/arthurdejong/python-stdnum) (`stdnum.tr`) ile aynı sonucu verir; testlerdeki bilinen örnek numaralar oradan alınmıştır.
+
 ## Kaynaklar
 
 - Banka kodları: [TCMB FAST katılımcı listesi](https://www.tcmb.gov.tr/wps/wcm/connect/fast/katilimcilar) (mevduat ve katılım bankaları; 2026-10)
 - Test kartları: [iyzico sandbox test kartları](https://docs.iyzico.com/ek-bilgiler/test-kartlari) (başarılı yanıt dönenler)
-- TCKN ve VKN algoritmaları: [python-stdnum](https://github.com/arthurdejong/python-stdnum) (`stdnum.tr`) ile aynı sonucu verir
-- Testler, üretilen değerleri bağımsız kütüphanelerle doğrular: [IbanNet](https://github.com/skwasjer/IbanNet), [TurkishId](https://github.com/ssg/TurkishId), [TurkishValidators](https://github.com/enesatacdev/TurkishValidators)
 
 ## Lisans
 
