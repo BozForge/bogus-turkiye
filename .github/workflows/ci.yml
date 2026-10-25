@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - run: dotnet restore BozForge.Bogus.Turkiye.slnx
+      - run: dotnet build BozForge.Bogus.Turkiye.slnx -c Release --no-restore
+      - run: dotnet test BozForge.Bogus.Turkiye.slnx -c Release --no-build
+      - run: dotnet pack src/BozForge.Bogus.Turkiye -c Release --no-build -o artifacts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: artifacts/*
