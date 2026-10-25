@@ -1,5 +1,6 @@
 # v ile başlayan bir etiket (ör. v0.1.0) itildiğinde paketi nuget.org'a yayınlar.
-# Gerekli secret: NUGET_API_KEY (nuget.org > API Keys, yalnızca BozForge.* için Push yetkisi).
+# Kimlik doğrulama Trusted Publishing ile: nuget.org'daki BozForge politikası bu repoyu ve
+# bu dosyayı (release.yml) tanır, her çalışmada 1 saatlik geçici anahtar verir. Secret gerekmez.
 name: Release
 
 on:
@@ -9,6 +10,9 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -22,5 +26,11 @@ jobs:
       - run: dotnet test BozForge.Bogus.Turkiye.slnx -c Release
       - run: dotnet pack src/BozForge.Bogus.Turkiye -c Release -o artifacts -p:Version=$VERSION
 
+      - name: NuGet girişi (geçici anahtar)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: huseyinbozdemir
+
       - name: nuget.org'a gönder
-        run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
