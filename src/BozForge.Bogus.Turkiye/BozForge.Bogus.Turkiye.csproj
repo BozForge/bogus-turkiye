@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
     <RootNamespace>BozForge.Bogus.Turkiye</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <PackageId>BozForge.Bogus.Turkiye</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <Description>Türkiye'ye özgü test verisi için Bogus eklentisi: kontrol haneleri tutan TCKN ve VKN, gerçek banka kodlu TR IBAN, herkese açık test kartları, GSM numarası, araç plakası ve il/ilçe/mahalle/posta kodu tutarlı adres. Turkish test data extensions for Bogus.</Description>
     <PackageTags>bogus;faker;test-data;turkey;turkiye;tckn;vkn;iban;plaka;adres;posta-kodu;türkiye</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
