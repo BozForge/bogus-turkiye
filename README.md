@@ -1,8 +1,13 @@
 # BozForge.Bogus.Turkiye
 
+[![NuGet](https://img.shields.io/nuget/v/BozForge.Bogus.Turkiye.svg)](https://www.nuget.org/packages/BozForge.Bogus.Turkiye)
+[![NuGet indirme](https://img.shields.io/nuget/dt/BozForge.Bogus.Turkiye.svg)](https://www.nuget.org/packages/BozForge.Bogus.Turkiye)
+[![CI](https://img.shields.io/github/actions/workflow/status/BozForge/bogus-turkiye/ci.yml?branch=main&label=CI)](https://github.com/BozForge/bogus-turkiye/actions/workflows/ci.yml)
+[![Lisans: MIT](https://img.shields.io/badge/lisans-MIT-blue.svg)](https://github.com/BozForge/bogus-turkiye/blob/main/LICENSE)
+
 [Bogus](https://github.com/bchavez/Bogus) için Türkiye eklentisi. Testlerinde ve demo verinde doğrulamadan geçen TCKN, VKN, TR IBAN, test kartı, GSM numarası ve araç plakası, ili, ilçesi, mahallesi ve posta kodu birbirini tutan adres üretir.
 
-*Turkish test data extensions for Bogus: valid TCKN (national ID), VKN (tax ID), TR IBAN with real bank codes, public test cards, mobile numbers, licence plates and consistent addresses (province, district, neighbourhood and postal code that belong together).*
+*Turkish test data extensions for Bogus: valid TCKN (national ID), VKN (tax ID), TR IBAN with real bank codes, public test cards, mobile numbers, licence plates and consistent addresses (province, district, neighbourhood and postal code that belong together). [English section below.](#english)*
 
 ## Neden?
 
@@ -95,6 +100,42 @@ Bogus'un seed'iyle çalışır: aynı seed aynı veriyi üretir (`UseSeed`, `Ran
 - Test kartları: [iyzico sandbox test kartları](https://docs.iyzico.com/ek-bilgiler/test-kartlari) (başarılı yanıt dönenler)
 - Adresler: PTT posta kodu listesi (postakodu.ptt.gov.tr), [muratgozel/turkey-neighbourhoods](https://github.com/muratgozel/turkey-neighbourhoods) üzerinden (MIT, 2024-01 verisi; 81 il, 973 ilçe, 73.300 mahalle ve köy). Lisans metni [THIRD-PARTY-NOTICES.md](https://github.com/BozForge/bogus-turkiye/blob/main/THIRD-PARTY-NOTICES.md) dosyasında. Veri `dotnet run tools/AdresVerisi.cs` ile yeniden üretilir.
 - Plaka kuralları ve ayrılmış seriler: [Vehicle registration plates of Turkey](https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_Turkey) (Karayolları Trafik Yönetmeliği'nde bu kurallar ek şekillerde yer alıyor)
+
+## English
+
+Bogus can generate a TR IBAN, but it may contain letters, a non-zero reserve digit and a random bank code (about 1 in 5 fail IbanNet), and Bogus has no Turkish ID numbers, plates or districts. This package adds Turkish test data that passes independent validation:
+
+```bash
+dotnet add package BozForge.Bogus.Turkiye
+```
+
+```csharp
+using Bogus;
+using BozForge.Bogus.Turkiye;
+
+var customers = new Faker<Customer>("tr")
+    .RuleFor(c => c.NationalId, f => f.Person.Tckn())
+    .RuleFor(c => c.Iban, f => f.Finance.TrIban(TrBank.Ziraat))
+    .RuleFor(c => c.Phone, f => f.Phone.TrGsm())
+    .RuleFor(c => c.City, f => f.Person.TrAddress().ProvinceName)
+    .RuleFor(c => c.PostalCode, f => f.Person.TrAddress().PostalCode)
+    .Generate(100);
+```
+
+| Method | Output |
+|---|---|
+| `f.Person.Tckn()` | T.C. Kimlik No (national ID) with valid check digits; stable per person |
+| `f.Company.Vkn()` | Vergi Kimlik No (tax ID) with a valid check digit |
+| `f.Finance.TrIban(TrBank?, formatted)` | TR IBAN with a real bank code (TCMB participant list) |
+| `f.Finance.TrTestCard(CardScheme?, CardType?)` | A published sandbox test card (iyzico); card numbers are never generated |
+| `f.Phone.TrGsm(TrPhoneFormat)` | Mobile number with a valid 5xx operator prefix |
+| `f.Vehicle.TrPlate(TrProvince?, formatted)` | Private licence plate, e.g. `34 ABC 123`; reserved series (police, taxi, diplomatic…) excluded |
+| `f.Address.TrAddress(TrProvince?)` | Province, district, neighbourhood and postal code from one real PTT record, plus a random street |
+| `f.Person.TrAddress()` | Same address for the same person, so separate rules stay consistent |
+
+Everything respects Bogus seeds (`UseSeed`, `Randomizer.Seed`). Tests validate the output with IbanNet, TurkishId and TurkishValidators rather than this package's own code.
+
+**Test data only.** Generated ID numbers, IBANs and plates can match real people, accounts or vehicles. Do not use them in production or to identify anyone. Targets `netstandard2.0` and `net10.0`.
 
 ## Lisans
 
