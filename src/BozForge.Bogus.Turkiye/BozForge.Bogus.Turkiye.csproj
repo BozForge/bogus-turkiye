@@ -6,9 +6,9 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <PackageId>BozForge.Bogus.Turkiye</PackageId>
-    <Version>0.1.0</Version>
-    <Description>Türkiye'ye özgü test verisi için Bogus eklentisi: kontrol haneleri tutan TCKN ve VKN, gerçek banka kodlu TR IBAN, herkese açık test kartları ve GSM numarası. Turkish test data extensions for Bogus.</Description>
-    <PackageTags>bogus;faker;test-data;turkey;turkiye;tckn;vkn;iban;türkiye</PackageTags>
+    <Version>0.2.0</Version>
+    <Description>Türkiye'ye özgü test verisi için Bogus eklentisi: kontrol haneleri tutan TCKN ve VKN, gerçek banka kodlu TR IBAN, herkese açık test kartları, GSM numarası, araç plakası ve il/ilçe/mahalle/posta kodu tutarlı adres. Turkish test data extensions for Bogus.</Description>
+    <PackageTags>bogus;faker;test-data;turkey;turkiye;tckn;vkn;iban;plaka;adres;posta-kodu;türkiye</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
@@ -28,6 +28,8 @@
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    <None Include="..\..\THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" />
+    <EmbeddedResource Include="Data\adresler.txt" LogicalName="BozForge.Bogus.Turkiye.adresler.txt" />
     <InternalsVisibleTo Include="BozForge.Bogus.Turkiye.Tests" />
   </ItemGroup>
 

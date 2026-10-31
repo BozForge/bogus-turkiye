@@ -38,6 +38,14 @@ public static class ExtensionsForTurkiye
         "551", "552", "553", "554", "555", "559",
     };
 
+    private static readonly TrProvince[] Provinces = (TrProvince[])Enum.GetValues(typeof(TrProvince));
+
+    // Plakada Türkçeye özgü harfler (Ç, Ğ, İ, Ö, Ş, Ü) ile Q, W ve X kullanılmaz.
+    private const string PlateLetters = "ABCDEFGHIJKLMNOPRSTUVYZ";
+
+    // Harf sayısı -> rakam grubunun alabileceği uzunluklar (harf + rakam en çok 6).
+    private static readonly int[][] PlateDigitLengths = { new[] { 4, 5 }, new[] { 3, 4 }, new[] { 2, 3 } };
+
     /// <summary>
     /// T.C. Kimlik Numarası: 11 hane, ilk hane 0 değil, 10. ve 11. haneler kontrol hanesi.
     /// Aynı <see cref="Person"/> için her çağrıda aynı numarayı döndürür.
@@ -135,6 +143,90 @@ public static class ExtensionsForTurkiye
             TrPhoneFormat.Digits => prefix + rest,
             _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
         };
+    }
+
+    /// <summary>
+    /// Tutarlı bir Türkiye adresi: il, ilçe, mahalle ve posta kodu birbirine aittir.
+    /// Önce il, sonra o ilin ilçelerinden biri, sonra o ilçenin mahallelerinden biri seçilir.
+    /// </summary>
+    /// <param name="address">Bogus adres veri seti.</param>
+    /// <param name="province">İl; verilmezse rastgele seçilir.</param>
+    public static TrAddress TrAddress(this Address address, TrProvince? province = null)
+        => TrAddress(address.Random, province);
+
+    /// <summary>
+    /// Kişinin adresi. Aynı <see cref="Person"/> için her çağrıda aynı adresi döndürür;
+    /// böylece il, ilçe ve posta kodu ayrı kurallarda kullanılsa da birbirini tutar.
+    /// </summary>
+    public static TrAddress TrAddress(this Person person)
+    {
+        const string key = nameof(ExtensionsForTurkiye) + "TrAddress";
+        var context = ((IHasContext)person).Context;
+        if (context.TryGetValue(key, out var cached)) return (TrAddress)cached;
+
+        var address = TrAddress(person.Random, province: null);
+        context[key] = address;
+        return address;
+    }
+
+    /// <summary>
+    /// Özel araç plakası: il kodu (01-81), 1-3 harf ve 2-5 rakam; ör. <c>34 ABC 123</c>.
+    /// Resmî ve özel araçlara ayrılmış harf grupları (polis, kamu, taksi, diplomatik,
+    /// geçici plaka vb.) üretilmez. Rakam grubu 0 ile başlamaz.
+    /// </summary>
+    /// <param name="vehicle">Bogus araç veri seti.</param>
+    /// <param name="province">İl; verilmezse rastgele seçilir.</param>
+    /// <param name="formatted"><c>true</c> ise gruplar boşlukla ayrılır (<c>34 ABC 123</c>), değilse bitişik yazılır (<c>34ABC123</c>).</param>
+    public static string TrPlate(this Vehicle vehicle, TrProvince? province = null, bool formatted = true)
+    {
+        var random = vehicle.Random;
+        var code = ((int)(province ?? random.ArrayElement(Provinces))).ToString("00");
+
+        var letterCount = random.Int(1, 3);
+        string letters;
+        do
+        {
+            var chars = new char[letterCount];
+            for (var i = 0; i < letterCount; i++) chars[i] = PlateLetters[random.Int(0, PlateLetters.Length - 1)];
+            letters = new string(chars);
+        } while (IsReservedPlateLetters(letters));
+
+        var digitCount = random.ArrayElement(PlateDigitLengths[letterCount - 1]);
+        var digits = random.Int(1, 9) + string.Concat(random.Digits(digitCount - 1));
+
+        return formatted ? $"{code} {letters} {digits}" : code + letters + digits;
+    }
+
+    // Kaynak: Vehicle registration plates of Turkey (Wikipedia), özel seriler tablosu.
+    internal static bool IsReservedPlateLetters(string letters) => letters switch
+    {
+        "A" or "AA" or "AAA" => true,           // polis, kamu
+        "B" or "G" or "T" => true,              // uluslararası kuruluş, geçici, taksi
+        "CC" or "CD" => true,                   // konsolosluk, diplomatik
+        "JAA" or "SGH" or "GMR" => true,        // jandarma, sahil güvenlik, geçici gümrük
+        { Length: 2 } when letters[0] == 'M' => true,   // MA-MZ: geçici ikamet eden yabancılar
+        { Length: 3 } when letters[0] == 'S' => true,   // SAA-SZZ: geçici koruma
+        { Length: 3 } when letters[0] == 'T' && letters[1] <= 'K' => true,  // TAA-TKZ: İstanbul taksi
+        _ => false,
+    };
+
+    private static TrAddress TrAddress(Randomizer random, TrProvince? province)
+    {
+        var entry = AddressData.Get(province ?? random.ArrayElement(Provinces));
+        var district = random.ListItem(entry.Districts);
+        var neighborhood = random.ListItem(district.Neighborhoods);
+
+        // Adres Türkiye'de olduğu için sokak adı, Faker'ın dili ne olursa olsun Türkçe.
+        var street = new Address("tr") { Random = random }.StreetName();
+
+        return new TrAddress(
+            entry.Province,
+            entry.Name,
+            district.Name,
+            neighborhood.Name,
+            neighborhood.PostalCode,
+            street,
+            random.Int(1, 199).ToString());
     }
 
     internal static string Tckn(Randomizer random)
